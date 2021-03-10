@@ -1,0 +1,135 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+@model IEnumerable<Album>
+
+<div class="text-center">
+    <h1 class="display-4">ALBUMS</h1>
+    
+    <label for="albums">Seleccione un album:</label>
+    <select class="form-control" name="albums" id="albums">
+        <option value="0">Seleccione una opcion:</option>
+        @foreach (var a in Model)
+        {
+            <option value="@a.id">@a.title</option>
+        }
+    </select>
+    <br><br>
+
+    <button type="button" class="btn btn-primary" onclick="getPhotosbyId()">Visualizar Album</button>
+
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="modalPhotos">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Informacion relacionada</h5>
+                <button type="button" class="close btn btn-primary" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <td>
+                                Titulo
+                            </td>
+                            <td>
+                                Miniatura
+                            </td>
+                            <td>
+                                Comentarios
+                            </td>
+                        </tr>
+                    </thead>
+                    <tbody id="bodyPhotos"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal" tabindex="-1" role="dialog" id="modalComments">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Comentarios Recientes</h5>
+                <button type="button" class="close btn btn-primary" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div id="bodyModalComments" class="modal-body">
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    function getPhotosbyId() {
+        var idAlbum = $("#albums").val();
+
+        if (idAlbum > 0 && idAlbum !== "0") {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("getPhotos", "Home")',
+                cache: false,
+                data: { "idAlbum": idAlbum },
+                success: function (items) {
+                    $("#bodyPhotos").empty();
+                    loadTablePhotos(items);
+
+                    $("#modalPhotos").modal("show");
+                    
+                }, error: function (xhr, status, p3, p4) {
+                    var err = "Error " + " " + status + " " + p3 + " " + p4;
+                    if (xhr.responseText && xhr.responseText[0] == "{")
+                        err = JSON.parse(xhr.responseText).Message;
+                    console.log(err);
+                }
+            });
+        } else {
+            alert("Por favor, seleccione un elemento de la lista.");
+        }
+
+    }
+
+    $(function () {
+        getComments = function (elm) {
+            var commentId = $(elm).attr('id');
+
+            if (commentId > 0 && commentId !== "0") {
+                $.ajax({
+                    type: "GET",
+                    url: '@Url.Action("getComments", "Home")',
+                    cache: false,
+                    data: { "commentId": commentId },
+                    success: function (items) {
+                        $("#bodyModalComments").empty();
+                        loadComments(items);
+                        $("#modalComments").modal("show");
+                        
+                    }, error: function (xhr, status, p3, p4) {
+                        var err = "Error " + " " + status + " " + p3 + " " + p4;
+                        if (xhr.responseText && xhr.responseText[0] == "{")
+                            err = JSON.parse(xhr.responseText).Message;
+                        console.log(err);
+                    }
+                });
+            } else {
+                alert("Error durante la consulta, intente nuevamente.");
+            }
+        };
+    });
+
+</script>
